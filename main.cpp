@@ -1,3 +1,4 @@
+#include <benchmark/benchmark.h>
 #include "immintrin.h"
 #include <iostream>
 #include <cstdint>
@@ -53,18 +54,6 @@ uint64_t avx512_vpopcnt_reduce(const uint8_t* data, const size_t size) {
     return popcnt;
 }
 
-#ifdef __MAIN__
-int main() {
-    size_t bufsize = 6400000;
-    uint8_t* a = new uint8_t[bufsize];
-    for (auto ii = 0; ii < bufsize; ++ii) {
-        a[ii] = rand() % 128;
-    }
-    std::cout << "RD_DEBUG: " << avx512_vpopcnt_reduce(a, bufsize) << ", " << avx512_vpopcnt(a, bufsize) << std::endl;
-    return 0;
-}
-#else
-#include <benchmark/benchmark.h>
 static void pocnt_accumulator(benchmark::State& state) {
     // Perform setup here
     size_t bufsize = state.range(0);
@@ -86,6 +75,5 @@ static void pocnt_reduce(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(pocnt_reduce)->Arg(64*1000);
-BENCHMARK(pocnt_accumulator)->Arg(64*1000);
-#endif
+BENCHMARK(pocnt_reduce)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
+BENCHMARK(pocnt_accumulator)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
