@@ -58,6 +58,10 @@ static void pocnt_accumulator(benchmark::State& state) {
     // Perform setup here
     size_t bufsize = state.range(0);
     uint8_t* a = new uint8_t[bufsize];
+    srand(42);
+    for (size_t ii = 0; ii < bufsize; ++ii) {
+        a[ii] = rand() % 255;
+    }
     for (auto _ : state) {
         uint64_t retval = avx512_vpopcnt(a, bufsize);
         benchmark::DoNotOptimize(retval);
@@ -68,6 +72,10 @@ static void pocnt_reduce(benchmark::State& state) {
     // Perform setup here
     size_t bufsize = state.range(0);
     uint8_t* a = new uint8_t[bufsize];
+    srand(42);
+    for (size_t ii = 0; ii < bufsize; ++ii) {
+        a[ii] = rand() % 255;
+    }
     for (auto _ : state) {
         uint64_t retval = avx512_vpopcnt_reduce(a, bufsize);
         benchmark::DoNotOptimize(retval);
