@@ -106,6 +106,9 @@ static void pg_popcount(benchmark::State& state) {
 }
 
 // Register the function as a benchmark
-BENCHMARK(pocnt_reduce)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
-BENCHMARK(pocnt_accumulator)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
-BENCHMARK(pg_popcount)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
+#define BENCH(func) \
+    BENCHMARK(func)->Arg(64*10)->Arg(2000)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
+
+BENCH(pocnt_reduce)
+BENCH(pocnt_accumulator)
+BENCH(pg_popcount)
