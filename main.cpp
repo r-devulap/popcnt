@@ -3,6 +3,16 @@
 #include <iostream>
 #include <cstdint>
 
+uint64_t pg_popcount(const uint8_t *buf, int bytes) {
+    uint64_t popcnt = 0;
+    const uint64_t *words = (const uint64_t *) buf;
+    while (bytes >= 8) {
+        popcnt +=  _popcnt64(*words++);
+        bytes -= 8;
+    }
+    return popcnt;
+}
+
 // version 1: https://github.com/WojciechMula/sse-popcount/blob/master/popcnt-avx512-vpopcnt.cpp
 uint64_t avx512_vpopcnt(const uint8_t* data, const size_t size) {
     const size_t chunks = size / 64;
@@ -81,7 +91,21 @@ static void pocnt_reduce(benchmark::State& state) {
         benchmark::DoNotOptimize(retval);
     }
 }
+static void pg_popcount(benchmark::State& state) {
+    // Perform setup here
+    size_t bufsize = state.range(0);
+    uint8_t* a = new uint8_t[bufsize];
+    srand(42);
+    for (size_t ii = 0; ii < bufsize; ++ii) {
+        a[ii] = rand() % 255;
+    }
+    for (auto _ : state) {
+        uint64_t retval = pg_popcount(a, bufsize);
+        benchmark::DoNotOptimize(retval);
+    }
+}
 
 // Register the function as a benchmark
 BENCHMARK(pocnt_reduce)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
 BENCHMARK(pocnt_accumulator)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
+BENCHMARK(pg_popcount)->Arg(64*10)->Arg(64*100)->Arg(64*1000)->Arg(64*10000)->Arg(64*100000)->Arg(64*1000000);
