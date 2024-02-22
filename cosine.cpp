@@ -1,6 +1,10 @@
 #include <immintrin.h>
-#include <benchmark/benchmark.h>
 #include <cmath>
+#include <iostream>
+#include <time.h>
+#ifndef __MAIN__
+#include <benchmark/benchmark.h>
+#endif
 
 inline static
 __attribute__((target("avx512bw", "avx512f")))
@@ -55,6 +59,7 @@ double cosine_avx512(const float* __restrict__ ax, const float* __restrict__ bx,
     return (double) abf / sqrt((double) aaf * (double) bbf);
 }
 
+#ifndef __MAIN__
 static void cosine_autovec(benchmark::State &state)
 {
     size_t bufsize = state.range(0);
@@ -62,8 +67,8 @@ static void cosine_autovec(benchmark::State &state)
     float * b = new float[bufsize];
     srand(42);
     for (size_t ii = 0; ii < bufsize; ++ii) {
-        a[ii] = rand() / RAND_MAX;
-        b[ii] = rand() / RAND_MAX;
+        a[ii] = (float) rand() / RAND_MAX;
+        b[ii] = (float) rand() / RAND_MAX;
     }
     for (auto _ : state) {
         auto retval = cosine_distance(a, b, bufsize);
@@ -71,25 +76,42 @@ static void cosine_autovec(benchmark::State &state)
     }
 }
 
-static void cosine_simsimd(benchmark::State &state)
+static void cosine_simd(benchmark::State &state)
 {
     size_t bufsize = state.range(0);
     float * a = new float[bufsize];
     float * b = new float[bufsize];
     srand(42);
     for (size_t ii = 0; ii < bufsize; ++ii) {
-        a[ii] = rand() / RAND_MAX;
-        b[ii] = rand() / RAND_MAX;
+        a[ii] = (float) rand() / RAND_MAX;
+        b[ii] = (float) rand() / RAND_MAX;
     }
     for (auto _ : state) {
         float retval = cosine_avx512(a, b, bufsize);
         benchmark::DoNotOptimize(retval);
     }
 }
+#endif
 
+#ifdef __MAIN__
+int main() {
+    size_t bufsize = 64000;
+    srand(time(NULL));
+    float* a = new float[bufsize];
+    float* b = new float[bufsize];
+    for (auto ii = 0; ii < bufsize; ++ii) {
+        a[ii] = (float) rand() / RAND_MAX;
+        b[ii] = (float) rand() / RAND_MAX;
+    }
+    std::cout << "RD_DEBUG: " << cosine_avx512(a, b, bufsize) << ", " << cosine_distance(a, b, bufsize) << std::endl;
+    return 0;
+}
+#else
 // Register the function as a benchmark
 #define BENCH(func) \
     BENCHMARK(func)->Arg(64)->Arg(640)->Arg(6400)->Arg(64000);
 
 BENCH(cosine_autovec)
-BENCH(cosine_simsimd)
+BENCH(cosine_simd)
+
+#endif
